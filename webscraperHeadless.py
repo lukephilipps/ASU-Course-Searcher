@@ -1,8 +1,14 @@
+#uncomment lines 8 and 50 if your computer is running too hot or haivng performance issues
+#uncomment line 81 if you want a message sent to your channel when the program first runs
+
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.common.exceptions import NoSuchElementException
 import Notifications
+#import time
 
+# webdriver option managing
+# sets up webdriver in the least annoying way possible (runs invisibly, doesn't spam the console)
 browserOptions = webdriver.ChromeOptions()
 browserOptions.add_argument('headless') #to keep selenium from opening browsers
 browserOptions.add_argument('log-level=3') #to keep selenium from spamming the console
@@ -32,43 +38,49 @@ def getUrls():
         url = 'https://webapp4.asu.edu/catalog/classlist?t=2221&k=' + num + '&hon=F&promod=F&e=all&page=1'
         urls.append(url)
 
-
 # This method waits for an element to load on the selenium browser so that no errors occur when trying to access it
 #
 # Parameters-
 # element: the XPATH of the desired element
 def waitForLoad(element):
-    i = True
     while i:
         try:
             browser.find_element(By.XPATH, element)
         except NoSuchElementException:
+            #time.sleep(1)
             continue
-        i = False
+        break
     return
 
 # This method endlessly checks for availability of classes whose urls are defined in the urls array
-# It prints info to the console about these classes if their number is in the classNums array
 def checkClasses():
-    global retries
+    global retries #this is simply to log how many times the program has looped
+    
+    #loop constantly forever
     while True:
+        #for every loop, check every class in the urls list created earlier
         for i, url in enumerate(urls):
+            #go to this url
             browser.get(urls[i])
-
+            
+            #wait for the open seat number to load, once it has, get the number with the find_element method of webdriver
             waitForLoad('//*[@id="informal"]/td[11]/div/span[1]')
             openSeats = browser.find_element(By.XPATH, '//*[@id="informal"]/td[11]/div/span[1]').text
+            
+            #this if statement checks if there is an available seat, notifying the discord channel if there is one
             if(openSeats != '0'):
                 Notifications.postMessageGeneral(classNums[i])
+            
+            #log the amount of available seats in the console (not very important just so you can see its working)
             print('Class ' + str(classNums[i]) + ': ' + openSeats + ' seats available.')
-
+        
+        #log the amount of times the program has retried to console
         retries += 1
         print('All classes checked, retrying for the ' + str(retries) + ' time.')
 
-Notifications.BeginTesting()
+#Notifications.BeginTesting()
 
+# This is what is run when the program is executed
 getClassNums()
 getUrls()
 checkClasses()
-
-#unreachable, but here in case somehow it is reached to prevent memory leak
-browser.quit()
