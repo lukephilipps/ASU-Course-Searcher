@@ -1,7 +1,5 @@
 import requests
 
-#https://discord.com/api/v9/channels/906478400921817102/messages URL for main channel
-
 header = {
     'authorization': ''
 }
